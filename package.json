@@ -1,0 +1,31 @@
+{
+  "name": "hal-discord",
+  "description": "Discord bot",
+  "keywords": [
+    "discord",
+    "bot"
+  ],
+  "author": "Tim Tissari Bjornstedt",
+  "homepage": "https://github.com/timbearcity/hal-discord",
+  "bugs": "https://github.com/timbearcity/hal-discord/issues",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "register": "node dist/deploy-commands.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
