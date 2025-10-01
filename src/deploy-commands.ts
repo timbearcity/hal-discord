@@ -15,18 +15,15 @@ const commands: SlashCommandBuilder[] = [
 const rest = new REST().setToken(discordToken);
 
 (async () => {
-  try {
-    console.log(`Started refreshing ${commands.length} application (/) commands.`);
+    try {
+        console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-    const data = await rest.put(
-      Routes.applicationCommands(appId),
-      { body: commands },
-    );
+        const data = await rest.put(Routes.applicationCommands(appId), { body: commands });
 
-    if (Array.isArray(data)) {
-        console.log(`Successfully refreshed ${data.length} application (/) commands.`);
+        if (Array.isArray(data)) {
+            console.log(`Successfully refreshed ${data.length} application (/) commands.`);
+        }
+    } catch (error) {
+        console.error(error);
     }
-  } catch (error) {
-    console.error(error);
-  }
 })();

@@ -41,15 +41,11 @@ export class TeamsHandler implements IHandler {
                 members.push(member);
             }
         }
-        console.log(members);
 
         members.sort(() => Math.random() - 0.5);
-        console.log(`Shuffled: ${members}`);
         const middle = Math.ceil(members.length / 2);
         const team1 = members.slice(0, middle);
         const team2 = members.slice(middle);
-        console.log(`Team 1: ${team1}`);
-        console.log(`Team 2: ${team2}`);
         this.teams.set(interaction.guild.id, new Map<number, GuildMember[]>([[1, team1], [2, team2]]));
 
         let content = "Team 1: ";
