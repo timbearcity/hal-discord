@@ -1,5 +1,5 @@
 import "dotenv/config";
-import {REST, Routes, SlashCommandBuilder} from "discord.js";
+import {REST, Routes, type SlashCommandOptionsOnlyBuilder} from "discord.js";
 import {TeamsHandler} from "./handlers/teams-handler.js";
 
 const discordToken = process.env["DISCORD_TOKEN"];
@@ -8,7 +8,7 @@ if (discordToken === undefined || appId === undefined) {
     throw new Error(`DISCORD_TOKEN: ${discordToken}, APP_ID: ${appId}`);
 }
 
-const commands: SlashCommandBuilder[] = [
+const commands: SlashCommandOptionsOnlyBuilder[] = [
     TeamsHandler.slashCommandBuilder,
 ];
 

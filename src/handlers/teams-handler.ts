@@ -5,8 +5,10 @@ import {
     ButtonStyle,
     ChannelType,
     ChatInputCommandInteraction,
-    type GuildMember, MessageFlags,
+    type GuildMember,
+    MessageFlags,
     SlashCommandBuilder,
+    type SlashCommandOptionsOnlyBuilder,
     VoiceChannel
 } from "discord.js";
 import type {IHandler} from "../ihandler.js";
@@ -14,9 +16,13 @@ import type {IHandler} from "../ihandler.js";
 export class TeamsHandler implements IHandler {
     public static readonly name: string = "teams";
 
-    public static readonly slashCommandBuilder: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly slashCommandBuilder: SlashCommandOptionsOnlyBuilder = new SlashCommandBuilder()
         .setName(TeamsHandler.name)
-        .setDescription("Randomize teams");
+        .setDescription("Randomize teams")
+        .addUserOption(option => option
+            .setName("exclude")
+            .setDescription("Exclude a user from the teams.")
+            .setRequired(false));
 
     private readonly teams: Map<string, Map<number, GuildMember[]>> = new Map<string, Map<number, GuildMember[]>>();
 
@@ -35,10 +41,13 @@ export class TeamsHandler implements IHandler {
             return;
         }
 
+        const excludedUser = interaction.options.getUser("exclude");
         const members = new Array<GuildMember>();
         for (const [, channel] of targetVoiceChannels) {
             for (const [, member] of channel.members as Map<string, GuildMember>) {
-                members.push(member);
+                if (member.id !== excludedUser?.id) {
+                    members.push(member);
+                }
             }
         }
 
