@@ -5,8 +5,11 @@ import {
     ButtonStyle,
     ChannelType,
     ChatInputCommandInteraction,
+    type Collection,
+    type GuildBasedChannel,
     type GuildMember,
     MessageFlags,
+    PermissionsBitField,
     SlashCommandBuilder,
     type SlashCommandOptionsOnlyBuilder,
     VoiceChannel
@@ -15,6 +18,8 @@ import type {IHandler} from "../ihandler.js";
 
 export class TeamsHandler implements IHandler {
     public static readonly name: string = "teams";
+    public static readonly startButtonId: string = "start";
+    public static readonly stopButtonId: string = "stop";
 
     public static readonly slashCommandBuilder: SlashCommandOptionsOnlyBuilder = new SlashCommandBuilder()
         .setName(TeamsHandler.name)
@@ -67,12 +72,17 @@ export class TeamsHandler implements IHandler {
             content += `${member}, `;
         }
 
-        const moveButton = new ButtonBuilder()
-            .setCustomId(TeamsHandler.name)
-            .setLabel("Move Users")
-            .setStyle(ButtonStyle.Primary);
+        const stopButton = new ButtonBuilder()
+            .setCustomId(TeamsHandler.stopButtonId)
+            .setLabel("Stop")
+            .setStyle(ButtonStyle.Danger);
 
-        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(moveButton);
+        const startButton = new ButtonBuilder()
+            .setCustomId(TeamsHandler.startButtonId)
+            .setLabel("Start")
+            .setStyle(ButtonStyle.Success);
+
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(stopButton, startButton);
 
         await interaction.reply({
             content: content,
@@ -83,6 +93,11 @@ export class TeamsHandler implements IHandler {
     public async handleButtonPress(interaction: ButtonInteraction) {
         if (interaction.guild === null) {
             await interaction.reply({ content: "This button can only be used in a server." });
+            return;
+        }
+
+        if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.MoveMembers)) {
+            await interaction.reply({ content: "You don't have permission to move members.", flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -99,11 +114,18 @@ export class TeamsHandler implements IHandler {
             return;
         }
 
+        switch (interaction.customId) {
+            case TeamsHandler.startButtonId: return this.handleButtonStartPress(interaction, targetVoiceChannels);
+            case TeamsHandler.stopButtonId: return this.handleButtonStopPress(interaction, targetVoiceChannels);
+        }
+    }
+
+    public async handleButtonStartPress(interaction: ButtonInteraction, targetVoiceChannels: Collection<string, GuildBasedChannel>) {
         try {
-            for (const member of this.teams.get(interaction.guild.id)?.get(1) ?? []) {
+            for (const member of this.teams.get(interaction.guild!.id)?.get(1) ?? []) {
                 await member.voice.setChannel(targetVoiceChannels.first() as VoiceChannel);
             }
-            for (const member of this.teams.get(interaction.guild.id)?.get(2) ?? []) {
+            for (const member of this.teams.get(interaction.guild!.id)?.get(2) ?? []) {
                 await member.voice.setChannel(targetVoiceChannels.last() as VoiceChannel);
             }
         } catch (error) {
@@ -111,17 +133,20 @@ export class TeamsHandler implements IHandler {
             await interaction.followUp({
                 content: "I encountered an error. Check my permissions and ensure I can see both channels.", flags: MessageFlags.Ephemeral });
         }
+    }
 
-        this.teams.delete(interaction.guild.id);
-
-        const moveButton = new ButtonBuilder()
-            .setCustomId(TeamsHandler.name)
-            .setLabel("Move Users")
-            .setStyle(ButtonStyle.Success)
-            .setDisabled(true);
-
-        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(moveButton);
-
-        await interaction.editReply({components: [row]});
+    public async handleButtonStopPress(interaction: ButtonInteraction, targetVoiceChannels: Collection<string, GuildBasedChannel>) {
+        try {
+            for (const member of this.teams.get(interaction.guild!.id)?.get(1) ?? []) {
+                await member.voice.setChannel(targetVoiceChannels.first() as VoiceChannel);
+            }
+            for (const member of this.teams.get(interaction.guild!.id)?.get(2) ?? []) {
+                await member.voice.setChannel(targetVoiceChannels.first() as VoiceChannel);
+            }
+        } catch (error) {
+            console.error("Failed to move users:", error);
+            await interaction.followUp({
+                content: "I encountered an error. Check my permissions and ensure I can see both channels.", flags: MessageFlags.Ephemeral });
+        }
     }
 }
